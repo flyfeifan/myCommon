@@ -76,7 +76,7 @@ class MutexLock : virtual public BaseLock{
 		virtual ~MutexLock();
 		virtual void enter();
 		virtual void leave();
-		int          tryenter();
+		bool          tryenter();
 	private:
 		pthread_mutex_t  _mutex;
 
@@ -87,6 +87,17 @@ class MutexLock : virtual public BaseLock{
 };
 typedef TempGuard<MutexLock>  MutexGuard;
 
+class 
+
+class Semaphore{
+	public:
+		Semaphore();
+		virtual ~Semaphore();
+		
+	private:
+		sem_t _sem;
+
+};
 
 }
 #endif

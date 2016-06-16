@@ -35,9 +35,9 @@ void MutexLock::leave()
 		throw LockException("unlock mutex failed", __FILE__, __LINE__, errno);
 }
 
-int MutexLock::tryenter()
+bool  MutexLock::tryenter()
 {
-	return pthread_mutex_trylock(&_mutex);
+	return pthread_mutex_trylock(&_mutex) == 0 ;
 }
 
 }
