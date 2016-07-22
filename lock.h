@@ -23,11 +23,11 @@ class LockException : public std::runtime_error{
 		}
 };
 
-template <typename __LOCK>
+template <typename MYLOCK>
 class TempGuard
 {
 	public:
-		TempGuard(__LOCK &lock):_lock(lock){
+		TempGuard(MYLOCK &lock):_lock(lock){
 			_lock.enter();
 		}
 
@@ -35,10 +35,28 @@ class TempGuard
 			_lock.leave();
 		}
 	private:
-		__LOCK & _lock;
+		MYLOCK & _lock;
 		TempGuard(const TempGuard &t);
-		TempGuard &operator=(const TempGuard &t);
+		TempGuard& operator=(const TempGuard &t);
 };
+
+template <typename WRLOCK>
+class WriteGuard
+{
+	public:
+		WriteGuard(WRLOCK &lock):_lock(lock){
+			_lock.wenter();
+		}
+
+		virtual ~WriteGuard(){
+			_lock.leave();
+		}
+	private:
+		WRLOCK & _lock;
+		WriteGuard(const WriteGuard &t);
+		WriteGuard& operator=(const WriteGuard &t);
+};
+
 
 class BaseLock{
 	public:
@@ -64,7 +82,7 @@ class LockGuard
 			m_lock.leave();
 		}
 	private:
-		LockGuard operator=(const LockGuard&);
+		LockGuard& operator=(const LockGuard&);
 		LockGuard (const LockGuard&);
 		BaseLock& m_lock;
 };
@@ -81,14 +99,44 @@ class MutexLock : virtual public BaseLock{
 		pthread_mutex_t  _mutex;
 
 		MutexLock(const MutexLock&);
-		MutexLock operator=(const MutexLock&);
+		MutexLock& operator=(const MutexLock&);
 
 
 };
 typedef TempGuard<MutexLock>  MutexGuard;
 
-class 
+class ReadWriteLock : virtual public BaseLock{
+	public:
+		ReadWriteLock();
+		virtual ~ReadWriteLock();
+		virtual void enter(); //read lock
+		virtual void leave(); //release lock
+		virtual void wenter(); //write lock
+	private:
+		pthread_rwlock_t   _rwlock;
 
+		ReadWriteLock(const ReadWriteLock&);
+		ReadWriteLock& operator=(const ReadWriteLock&);
+};
+typedef TempGuard<ReadWriteLock>  RrwLockGuard;
+typedef WriteGuard<ReadWriteLock>  WrwLockGuard;
+
+class CondLock{
+	public:
+		CondLock();
+		virtual ~CondLock();
+		virtual bool wait(int msec = 0);
+		virtual bool signal();
+		virtual bool broadcast();
+		
+	private:
+		pthread_cond_t   _condlock;
+		pthread_mutex_t  _mutexlock;
+
+		CondLock(const CondLock&);
+		CondLock& operator=(const CondLock&);
+};
+/*
 class Semaphore{
 	public:
 		Semaphore();
@@ -98,6 +146,6 @@ class Semaphore{
 		sem_t _sem;
 
 };
-
+*/
 }
 #endif
