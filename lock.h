@@ -4,6 +4,7 @@
 #include<stdexcept>
 #include <pthread.h>
 #include <sstream>
+#include <semaphore.h>
 
 namespace CommonLock{
 class LockException : public std::runtime_error{
@@ -136,16 +137,18 @@ class CondLock{
 		CondLock(const CondLock&);
 		CondLock& operator=(const CondLock&);
 };
-/*
+
 class Semaphore{
 	public:
 		Semaphore();
 		virtual ~Semaphore();
 		
+		bool post();
+		bool wait(int mesc = 0);
 	private:
 		sem_t _sem;
 
 };
-*/
+
 }
 #endif

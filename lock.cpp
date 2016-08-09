@@ -123,5 +123,38 @@ bool CondLock::broadcast()
 	return (0 == pthread_cond_broadcast(&_condlock));
 }
 
+Semaphore::Semaphore()
+{
+	if(0 != sem_init(&_sem, 0, 0))
+		throw LockException("create Semaphore failed", __FILE__, __LINE__, errno);
+}
+
+Semaphore::~Semaphore()
+{
+	if(0 != sem_destroy(&_sem) )
+		throw LockException("destroy Semaphore failed", __FILE__, __LINE__, errno);
+}
+
+bool Semaphore::post()
+{
+	return 0 == sem_post(&_sem);
+}
+
+bool Semaphore::wait(int mesc/* = 0*/)
+{
+	if( mesc == 0 )
+		return 0 == sem_wait(&_sem);
+	else{
+		struct timespec tsp;
+		if( 0 != clock_gettime(CLOCK_REALTIME, &tsp) )
+			return false;
+		//tsp.tv_sec  += (tsp.tv_nsec + mesc * 1000 * 1000) / (1000 * 1000 * 1000);
+		//tsp.tv_nsec = (tsp.tv_nsec + mesc * 1000 * 1000) % (1000 * 1000 * 1000);	
+		tsp.tv_sec += mesc/1000;
+		tsp.tv_nsec += (mesc % 1000) * 1000 * 1000;
+		return 0 == sem_timedwait(&_sem, &tsp);
+	}
+}
+
 
 }

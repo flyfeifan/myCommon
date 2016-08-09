@@ -1,16 +1,18 @@
 #include <iostream>
+#include <set>
 #include "thread.h"
 #include "lock.h"
 #include <sys/time.h>
+#include <stdlib.h>
+#include <strstream>
 
 class ThreadTack : public Common::Thread{
-
 public:
 	ThreadTack( int &count, CommonLock::CondLock &lock, int man = 0) : _count(count), _lock(lock), manger(man) { }
 	virtual ~ThreadTack(){ }
 	virtual int run()
 	{
-		sleep(5);
+		//sleep(5);
 		if(manger)
 		{
 			for(int i = 0; i < 100000; i++ )
@@ -56,32 +58,138 @@ private:
 
 };
 
+std::string  strCache;
+CommonLock::Semaphore semaphore;
+
+class ThreadSem : public Common::Thread{
+public:
+	ThreadSem(int man = 0) : manger(man) { }
+	virtual ~ThreadSem(){ 
+		struct timeval tm;
+		gettimeofday(&tm, NULL);
+
+		std::cout << "~ThreadSem:"<<manger<< "sec: "<< tm.tv_sec << " msce: "<< tm.tv_usec<<std::endl; }
+	virtual int run()
+	{
+		if(manger)
+		{
+			for( char i = 'a'; i <= 'z'; i++)
+			{
+				strCache.push_back(i);
+				semaphore.post();
+				sleep(2);
+			}
+		}
+		else
+		{
+			while( 1 ){
+				if( semaphore.wait( 3010 ) ){
+					struct timeval tm;
+					gettimeofday(&tm, NULL);
+					std::cout<<strCache<< "###sec: "<< tm.tv_sec << " msce: "<< tm.tv_usec <<std::endl;
+				}else
+				{
+					std::cout<<"break"<<std::endl;
+					break;
+				}
+			}
+		}
+
+		return 100;
+	}
+private:
+	int manger;
+};
+
+//std::set<std::string> _cache;
+std::set<int> _cache;
+int     count = 0;
+CommonLock::ReadWriteLock readwritelock;
+
+class ThreadWR : public Common::Thread{
+public:
+	ThreadWR(int man = 0) : manger(man) { }
+	virtual ~ThreadWR(){ 
+		struct timeval tm;
+		gettimeofday(&tm, NULL);
+
+		std::cout << "~ThreadRW:"<<manger<< "sec: "<< tm.tv_sec << " msce: "<< tm.tv_usec<<std::endl; }
+	virtual int run()
+	{
+		srand(time(0));
+
+		if(manger)
+		{
+			for( int i = 0 ; i < 1000; i++)
+			{
+				std::strstream ostr;
+				//std::cout<<"th: "<<_tid<< ostr.str()<<std::endl;
+				{
+					CommonLock::WrwLockGuard gd(readwritelock);
+					count ++;
+					//ostr << _tid << ":" << count;
+					//_cache.insert(ostr.str());
+					_cache.insert(count);
+				}
+				//std::cout<<"th: "<<_tid<< ostr.str()<<std::endl;
+				sleep(rand() % 3);
+			}
+		}
+		else
+		{
+			while( 1 ){
+				//std::string str;
+				int count = 0;
+				{
+					CommonLock::WrwLockGuard gd(readwritelock);
+					//CommonLock::RrwLockGuard gd(readwritelock);
+					if( _cache.empty() )
+						//str = "empty";
+						count = 0;
+					else{
+						//str = *_cache.begin();
+						count = *_cache.begin();
+						std::cout<<count<<std::endl;
+						_cache.erase(_cache.begin());
+
+					}
+				}
+				//std::cout<<"th: "<<_tid<< " : "<<str <<std::endl;
+				sleep(2);
+			}
+		}
+
+		return 100;
+	}
+private:
+	int manger;
+};
 
 int main(void)
 {
 	int count = 0;
 	CommonLock::CondLock countlock;
 	try{
-		Common::Thread *th1 = new ThreadTack(count, countlock, 1);
-		Common::Thread *th2 = new ThreadTack(count, countlock);
-		Common::Thread *th3 = new ThreadTack(count, countlock);
-		Common::Thread *th4 = new ThreadTack(count, countlock);
-		Common::Thread *th5 = new ThreadTack(count, countlock);
-		Common::Thread *th6 = new ThreadTack(count, countlock);
-		Common::Thread *th7 = new ThreadTack(count, countlock);
-		Common::Thread *th8 = new ThreadTack(count, countlock);
-		Common::Thread *th9 = new ThreadTack(count, countlock);
-		Common::Thread *th10 = new ThreadTack(count, countlock);
-		Common::Thread *th11 = new ThreadTack(count, countlock);
-		Common::Thread *th12 = new ThreadTack(count, countlock);
-		Common::Thread *th13 = new ThreadTack(count, countlock);
-		Common::Thread *th14 = new ThreadTack(count, countlock);
-		Common::Thread *th15 = new ThreadTack(count, countlock);
-		Common::Thread *th16 = new ThreadTack(count, countlock);
-		Common::Thread *th17 = new ThreadTack(count, countlock);
-		Common::Thread *th18 = new ThreadTack(count, countlock);
-		Common::Thread *th19 = new ThreadTack(count, countlock);
-		Common::Thread *th20 = new ThreadTack(count, countlock);
+		ThreadWR* t2 = new ThreadWR();
+		ThreadWR* t0 = new ThreadWR(1);
+		sleep(1);
+		ThreadWR* t1 = new ThreadWR(0);
+		sleep(1);
+		ThreadWR* t3 = new ThreadWR(1);
+		ThreadWR* t4 = new ThreadWR(0);
+		sleep(1);
+		ThreadWR* t5 = new ThreadWR(1);
+		ThreadWR* t6 = new ThreadWR(0);
+		sleep(1);
+		ThreadWR* t7 = new ThreadWR(1);
+		ThreadWR* t8 = new ThreadWR(0);
+		sleep(1);
+		ThreadWR* t9 = new ThreadWR(1);
+		sleep(1);
+		ThreadWR* t10 = new ThreadWR(1);
+
+
+
 	}
 	catch(const std::runtime_error &err)
 	{
