@@ -50,6 +50,11 @@ public:
 		}*/
 		return 100;
 	}
+protected:
+	virtual void _final()
+	{
+		delete this;
+	}
 private:
 	int manger;
 	int &_count;
@@ -77,7 +82,7 @@ public:
 			{
 				strCache.push_back(i);
 				semaphore.post();
-				sleep(2);
+				sleep(0.8);
 			}
 		}
 		else
@@ -96,7 +101,13 @@ public:
 		}
 
 		return 100;
+	}	
+protected:	
+	virtual void _final()
+	{
+		delete this;
 	}
+
 private:
 	int manger;
 };
@@ -120,7 +131,7 @@ public:
 
 		if(manger)
 		{
-			for( int i = 0 ; i < 1000; i++)
+			for( int i = 0 ; i < 3; i++)
 			{
 				std::strstream ostr;
 				//std::cout<<"th: "<<_tid<< ostr.str()<<std::endl;
@@ -161,6 +172,11 @@ public:
 
 		return 100;
 	}
+protected:
+	virtual void _final()
+	{
+		delete this;
+	}
 private:
 	int manger;
 };
@@ -170,7 +186,7 @@ int main(void)
 	int count = 0;
 	CommonLock::CondLock countlock;
 	try{
-		ThreadWR* t2 = new ThreadWR();
+	/*	ThreadWR* t2 = new ThreadWR();
 		ThreadWR* t0 = new ThreadWR(1);
 		sleep(1);
 		ThreadWR* t1 = new ThreadWR(0);
@@ -187,6 +203,22 @@ int main(void)
 		ThreadWR* t9 = new ThreadWR(1);
 		sleep(1);
 		ThreadWR* t10 = new ThreadWR(1);
+*/
+		ThreadSem *t1 = new ThreadSem(1);
+		ThreadSem *t2 = new ThreadSem();
+		ThreadSem *t3 = new ThreadSem();
+
+		{
+			ThreadWR td(1);
+		}
+
+
+		int a = 10;
+		while(a > 0)
+		{
+			a --;
+			sleep(1);
+		}
 
 
 
@@ -199,10 +231,11 @@ int main(void)
 	{
 		std::cout<<"donot know what exception"<<std::endl;
 	}
-	while(1)
+	int a = 150;
+	while(a > 0)
 	{
-		int a = 0;
-		a++;
+		a --;
+		sleep(2);
 	}
 
 	return 0;

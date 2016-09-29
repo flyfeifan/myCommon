@@ -54,8 +54,12 @@ INTERRUPT:
 	}
 	curr_th->run();
 	// sem_post(&th->_thsem);
-
-	delete curr_th;
+	try{
+		curr_th->_final();
+	}catch(...)
+	{
+		//_final error do nothing
+	}
 	return (void *) NULL;
 }
 }

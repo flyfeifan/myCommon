@@ -37,12 +37,13 @@ public:
 	void start();
 	int  status(){ return _status; }
 protected:
+	virtual void _final(){ }
+protected:
 	pthread_t     _tid;
 private:
 	sem_t         _semstart;
 	bool          _wait;
 	int           _status;
-
 	//pthread_t     _tid;
 };
 
