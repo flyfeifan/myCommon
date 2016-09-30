@@ -6,7 +6,7 @@
 #include <sstream>
 #include <semaphore.h>
 
-namespace CommonLock{
+namespace Common{
 class LockException : public std::runtime_error{
 	public:
 		explicit LockException(std::string s, std::string file, int line, int err)

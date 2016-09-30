@@ -8,7 +8,7 @@
 
 class ThreadTack : public Common::Thread{
 public:
-	ThreadTack( int &count, CommonLock::CondLock &lock, int man = 0) : _count(count), _lock(lock), manger(man) { }
+	ThreadTack( int &count, Common::CondLock &lock, int man = 0) : _count(count), _lock(lock), manger(man) { }
 	virtual ~ThreadTack(){ }
 	virtual int run()
 	{
@@ -38,12 +38,12 @@ public:
 		for(int i = 0; i<10000; i++)
 		{
 			{
-				CommonLock::LockGuard gd(_lock);
+				Common::LockGuard gd(_lock);
 				_count ++;
 			}
 			{
-				//CommonLock::LockGuard gd(_lock);
-				CommonLock::MutexGuard gd(_lock);
+				//Common::LockGuard gd(_lock);
+				Common::MutexGuard gd(_lock);
 				std::cout<<"thread: "<<_tid<<" i: "<<i<<" count: " << _count <<std::endl;
 			}
 			sleep(1);
@@ -58,13 +58,13 @@ protected:
 private:
 	int manger;
 	int &_count;
-	CommonLock::CondLock &_lock;
+	Common::CondLock &_lock;
 
 
 };
 
 std::string  strCache;
-CommonLock::Semaphore semaphore;
+Common::Semaphore semaphore;
 
 class ThreadSem : public Common::Thread{
 public:
@@ -115,7 +115,7 @@ private:
 //std::set<std::string> _cache;
 std::set<int> _cache;
 int     count = 0;
-CommonLock::ReadWriteLock readwritelock;
+Common::ReadWriteLock readwritelock;
 
 class ThreadWR : public Common::Thread{
 public:
@@ -136,7 +136,7 @@ public:
 				std::strstream ostr;
 				//std::cout<<"th: "<<_tid<< ostr.str()<<std::endl;
 				{
-					CommonLock::WrwLockGuard gd(readwritelock);
+					Common::WrwLockGuard gd(readwritelock);
 					count ++;
 					//ostr << _tid << ":" << count;
 					//_cache.insert(ostr.str());
@@ -152,8 +152,8 @@ public:
 				//std::string str;
 				int count = 0;
 				{
-					CommonLock::WrwLockGuard gd(readwritelock);
-					//CommonLock::RrwLockGuard gd(readwritelock);
+					Common::WrwLockGuard gd(readwritelock);
+					//Common::RrwLockGuard gd(readwritelock);
 					if( _cache.empty() )
 						//str = "empty";
 						count = 0;
@@ -184,7 +184,7 @@ private:
 int main(void)
 {
 	int count = 0;
-	CommonLock::CondLock countlock;
+	Common::CondLock countlock;
 	try{
 	/*	ThreadWR* t2 = new ThreadWR();
 		ThreadWR* t0 = new ThreadWR(1);

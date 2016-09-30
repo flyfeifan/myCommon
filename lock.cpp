@@ -4,7 +4,7 @@
 
 #include "lock.h"
 
-namespace CommonLock{
+namespace Common{
 MutexLock::MutexLock()
 {
 	pthread_mutexattr_t  m_attr;
