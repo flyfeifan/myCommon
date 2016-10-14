@@ -7,6 +7,8 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <stdio.h>
+#include <string.h>
 
 namespace Common{
 
@@ -34,13 +36,17 @@ struct _QueueData{
 	_QueueData(int type, DATA& data):_msgtype(type), _data(data){ }
 };
 */
-template <typename DATA>
+//template <typename DATA>
 class MsgQueue{
 	public:
 	struct _QueueData{
 		long _msgtype;
-		DATA& _data;
-		_QueueData(int type, DATA& data):_msgtype(type), _data(data){ }
+		char _data[1024];
+		_QueueData(int type, char* data, int len = 0):_msgtype(type){ 
+			memset(_data, '\0', 1024);
+			if( len > 0 )
+				memcpy(_data, data, len); 
+		}
 	};
 
 	public:
@@ -50,7 +56,7 @@ class MsgQueue{
 			if( -1 == _key)
 				throw QueueException("init msgQueue failed, create key failed.", __FILE__, __LINE__, errno);
 
-			_msgid = msgget(_key, IPC_CREAT);
+			_msgid = msgget(_key, IPC_CREAT | 0666 );
 			if( _msgid == -1 )
 				throw QueueException("init msgQueue failed, msgget failed.", __FILE__, __LINE__, errno);
 		}
@@ -67,17 +73,18 @@ class MsgQueue{
 			return false;
 		}
 
-		virtual bool sendMsgToQueue(DATA& data, long msgSize,long msgtype)
+		virtual bool sendMsgToQueue(char* data, int msgSize,int msgtype)
 		{
 			if( _msgid < 0 )
-				_msgid = msgget(_key, IPC_CREAT);
+				_msgid = msgget(_key, IPC_CREAT | 0666 );
 			if( _msgid == -1 )
 				//throw QueueException("init msgQueue failed, msgget failed.", __FILE__, __LINE__, errno);
 				return false;
 
-			_QueueData queueData(msgtype, data);
-
-			if( -1 == msgsnd(_msgid, (const void *)&queueData, msgSize, IPC_NOWAIT) )
+			_QueueData queueData(msgtype, data, msgSize);
+			
+			//if( -1 == msgsnd(_msgid, (const void *)&queueData, msgSize, IPC_NOWAIT|MSG_NOERROR) )
+			if( 0 != msgsnd(_msgid, (const void *)&queueData, msgSize, 0) )
 			{
 				int a = errno;
 				if(EIDRM == errno)
@@ -86,21 +93,24 @@ class MsgQueue{
 			}
 			return true;
 		}
-		virtual bool rcvMsgFromQueue(DATA& data, long msgSize, long msgtype)
+		virtual bool rcvMsgFromQueue(char* data, int msgSize, int msgtype)
 		{
 			if( _msgid < 0 )
-				_msgid = msgget(_key, IPC_CREAT);
+				_msgid = msgget(_key, IPC_CREAT | 0666 );
 			if( _msgid == -1 )
 				return false;
 
 			_QueueData queueData(msgtype, data);
-
-			if( -1 == msgrcv(_msgid, (void *)(&queueData), msgSize, 0, IPC_NOWAIT) )
+			
+			int reslen = 0;
+			reslen = msgrcv(_msgid, (void *)(&queueData), msgSize, msgtype, 0);
+			if( reslen <= 0 )
 			{
 				if(EIDRM == errno)
 					_msgid = -1;
 				return false;
 			}
+			memcpy(data, queueData._data, reslen);
 			return true;
 		}
 	protected:
