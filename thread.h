@@ -31,7 +31,7 @@ public:
 	static void* thread_exec(void* th);
 
 public:
-	Thread( bool detach= false, bool wait=false);
+	Thread( bool detach= false);
 	virtual ~Thread();
 	virtual int run() = 0;
 	void start();
@@ -45,6 +45,21 @@ private:
 	bool          _wait;
 	int           _status;
 	//pthread_t     _tid;
+};
+
+class NativeThread    //class Thread 把未构造完成的对象指针传出，并不安全。改写此升级版本。
+{
+public:
+	static void* thread_exec(void* th);
+public:
+	NativeThread();
+	virtual ~NativeThread();
+	virtual int run() = 0;
+	void start();
+	void stop();
+	int  
+	
+
 };
 
 }

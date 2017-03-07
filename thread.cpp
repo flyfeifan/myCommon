@@ -5,7 +5,7 @@
 namespace Common{
 
 Thread::Thread( bool detach/*= false*/, bool wait/*=false*/)
-:_wait(wait)
+:_wait(true)
 {
 	if(wait){
 		if(sem_init(&_semstart, 0, 0)){

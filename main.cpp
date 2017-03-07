@@ -1,11 +1,12 @@
 #include <iostream>
 #include <set>
 #include "thread.h"
-#include "lock.h"
+#include "tools/nreentry.h"
+//#include "lock.h"
 #include <sys/time.h>
 #include <stdlib.h>
-#include <strstream>
-
+//#include <strstream>
+/*
 class ThreadTack : public Common::Thread{
 public:
 	ThreadTack( int &count, Common::CondLock &lock, int man = 0) : _count(count), _lock(lock), manger(man) { }
@@ -34,7 +35,7 @@ public:
 					std::cout<<"thread: " <<_tid<<" count: " << _count <<std::endl;
 			}
 		}
-		/*
+		
 		for(int i = 0; i<10000; i++)
 		{
 			{
@@ -47,7 +48,7 @@ public:
 				std::cout<<"thread: "<<_tid<<" i: "<<i<<" count: " << _count <<std::endl;
 			}
 			sleep(1);
-		}*/
+		}
 		return 100;
 	}
 protected:
@@ -180,48 +181,118 @@ protected:
 private:
 	int manger;
 };
+*/
+class DoSomeData{
+public:
+	DoSomeData() : _dataPos(0){
+	//	for(int i = 0; i< 56789; i++ )
+	//		_dataVect.push_back(i + 123);
+	}
+	~DoSomeData() { }
+	void addVectorFun( pthread_t tid)
+	{
+		if( _funEntry.tryEntry() )
+		{
+			_dataPos ++;
+			std::cout<<"add _dataPos: "<< _dataPos<< " tid: "<< tid <<  std::endl;
+			_funEntry.out();
+		}
+		else
+		{
+			//_dataPos --;
+			std::cout<<"not add  _dataPos: "<< _dataPos<<" tid: " << tid<< std::endl;
+		}
+	}
+
+	void addVectorFunTry(pthread_t tid )
+	{
+		try{
+			Common::NEntryTry   _tryEntry;
+			_dataPos ++;
+			std::cout<<"add _dataPos: "<< _dataPos<< " tid: "<< tid << std::endl;
+		}catch(const std::runtime_error &err)
+		{
+			std::cout<<"not add _dataPos: "<< _dataPos<< " tid: "<< tid<<std::endl;
+			std::cout<<err.what()<<std::endl;
+		}
+		return;
+	}
+		
+private:
+	Common::NEntryFunc  _funEntry;
+	//Common::NEntryTry   _tryEntry;
+	int                 _dataPos;
+	//std::vecthor<int>   _dataVect;
+};
+
+class DataThread : public Common::Thread{
+public:
+	DataThread(DoSomeData *data) : _data(data) { 
+		Common::Thread::start();
+	}
+	virtual ~DataThread(){ 
+		std::cout<< "stop thread: " << _tid<<std::endl;
+	}
+	virtual int run()
+	{
+		for(int i = 0; i< 300; i++ )
+		{
+			_data->addVectorFun( _tid );
+			sleep(1);
+		}
+		return 0;
+	}
+
+protected:	
+	virtual void _final()
+	{
+		delete this;
+	}
+private:
+	DoSomeData * _data;
+};
 
 int main(void)
 {
-	int count = 0;
-	Common::CondLock countlock;
+	//int count = 0;
+	//Common::CondLock countlock;
 	try{
-	/*	ThreadWR* t2 = new ThreadWR();
-		ThreadWR* t0 = new ThreadWR(1);
-		sleep(1);
-		ThreadWR* t1 = new ThreadWR(0);
-		sleep(1);
-		ThreadWR* t3 = new ThreadWR(1);
-		ThreadWR* t4 = new ThreadWR(0);
-		sleep(1);
-		ThreadWR* t5 = new ThreadWR(1);
-		ThreadWR* t6 = new ThreadWR(0);
-		sleep(1);
-		ThreadWR* t7 = new ThreadWR(1);
-		ThreadWR* t8 = new ThreadWR(0);
-		sleep(1);
-		ThreadWR* t9 = new ThreadWR(1);
-		sleep(1);
-		ThreadWR* t10 = new ThreadWR(1);
-*/
-		ThreadSem *t1 = new ThreadSem(1);
-		ThreadSem *t2 = new ThreadSem();
-		ThreadSem *t3 = new ThreadSem();
-
-		{
-			ThreadWR td(1);
-		}
-
-
-		int a = 10;
-		while(a > 0)
-		{
-			a --;
-			sleep(1);
-		}
-
-
-
+		DoSomeData  thedata;
+        new DataThread(&thedata);
+		/*
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		*/
+		/*
+		DataThread * t3 = new DataThread(&thedata);
+		DataThread * t4 = new DataThread(&thedata);
+		DataThread * t5 = new DataThread(&thedata);
+		DataThread * t6 = new DataThread(&thedata);
+		DataThread * t7 = new DataThread(&thedata);
+		DataThread * t8 = new DataThread(&thedata);
+		DataThread * t9 = new DataThread(&thedata);
+		DataThread * s1 = new DataThread(&thedata);
+		DataThread * s2 = new DataThread(&thedata);
+		DataThread * s3 = new DataThread(&thedata);
+		DataThread * s4 = new DataThread(&thedata);
+		DataThread * s5 = new DataThread(&thedata);
+		DataThread * s6 = new DataThread(&thedata);
+		DataThread * s7 = new DataThread(&thedata);
+		DataThread * s8 = new DataThread(&thedata);
+		  */
 	}
 	catch(const std::runtime_error &err)
 	{
@@ -231,11 +302,11 @@ int main(void)
 	{
 		std::cout<<"donot know what exception"<<std::endl;
 	}
-	int a = 150;
+	int a = 66;
 	while(a > 0)
 	{
 		a --;
-		sleep(2);
+		sleep(5);
 	}
 
 	return 0;
