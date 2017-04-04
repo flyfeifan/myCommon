@@ -225,20 +225,22 @@ private:
 	//std::vecthor<int>   _dataVect;
 };
 
-class DataThread : public Common::Thread{
+class DataThread : public Common::NativeThread{
 public:
 	DataThread(DoSomeData *data) : _data(data) { 
-		Common::Thread::start();
+		//Common::Thread::start();
 	}
 	virtual ~DataThread(){ 
 		std::cout<< "stop thread: " << _tid<<std::endl;
 	}
 	virtual int run()
 	{
+		srand(time(0));
 		for(int i = 0; i< 300; i++ )
 		{
-			_data->addVectorFun( _tid );
-			sleep(1);
+			//_data->addVectorFun( _tid );
+			_data->addVectorFunTry( _tid ); 
+			sleep( rand() % 10 );
 		}
 		return 0;
 	}
@@ -258,8 +260,7 @@ int main(void)
 	//Common::CondLock countlock;
 	try{
 		DoSomeData  thedata;
-        new DataThread(&thedata);
-		/*
+		
 		(new DataThread(&thedata))->start();
 		(new DataThread(&thedata))->start();
 		(new DataThread(&thedata))->start();
@@ -275,7 +276,29 @@ int main(void)
 		(new DataThread(&thedata))->start();
 		(new DataThread(&thedata))->start();
 		(new DataThread(&thedata))->start();
-		*/
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		(new DataThread(&thedata))->start();
+		
 		/*
 		DataThread * t3 = new DataThread(&thedata);
 		DataThread * t4 = new DataThread(&thedata);

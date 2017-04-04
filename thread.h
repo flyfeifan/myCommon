@@ -35,6 +35,8 @@ public:
 	virtual ~Thread();
 	virtual int run() = 0;
 	void start();
+
+	void join() { pthread_join(_tid, NULL); }
 	int  status(){ return _status; }
 protected:
 	virtual void _final(){ }
@@ -50,15 +52,25 @@ private:
 class NativeThread    //class Thread 把未构造完成的对象指针传出，并不安全。改写此升级版本。
 {
 public:
+	enum{ THREAD_STOP = 0, THREAD_RUNING=1 };
+
 	static void* thread_exec(void* th);
+
 public:
-	NativeThread();
+	NativeThread(bool detach= false);
 	virtual ~NativeThread();
 	virtual int run() = 0;
+	virtual void _final() { }
 	void start();
 	void stop();
-	int  
-	
+
+	int join(){ return  pthread_join(_tid, NULL); }
+	int status() { return  _status; }
+	pthread_t threadid(){ return _tid; }
+protected:
+	pthread_t _tid;
+	int       _status;
+	bool      _detach;
 
 };
 
