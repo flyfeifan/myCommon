@@ -2,7 +2,8 @@
 #include <set>
 #include "thread.h"
 #include "tools/nreentry.h"
-//#include "lock.h"
+#include "lock.h"
+#include <vector>
 #include <sys/time.h>
 #include <stdlib.h>
 //#include <strstream>
@@ -225,6 +226,10 @@ private:
 	//std::vecthor<int>   _dataVect;
 };
 
+std::vector<int> data;
+Common::CondLock  cond;
+Common::MutexLock mutex;
+
 class DataThread : public Common::NativeThread{
 public:
 	DataThread(DoSomeData *data) : _data(data) { 
@@ -235,13 +240,26 @@ public:
 	}
 	virtual int run()
 	{
-		srand(time(0));
-		for(int i = 0; i< 300; i++ )
+		std::cout << _tid << " : start run" << std::endl;
+		if( rand() % 2 == 0 )
 		{
-			//_data->addVectorFun( _tid );
-			_data->addVectorFunTry( _tid ); 
-			sleep( rand() % 10 );
+			mutex.enter();
+			std::cout <<_tid<<" :  mutex enter" << std::endl;
+			/*
+			int dd = rand() % 2000;
+			cond.enter();
+			data.push_back(dd);
+			cond.leave();
+			cond.signal();
+			std::cout<< "G: "<<dd<<std::endl;
+			*/
 		}
+		else
+		{
+			mutex.leave();
+			std::cout << _tid<< " : mutex leave" <<std::endl;
+		}
+
 		return 0;
 	}
 
@@ -299,23 +317,6 @@ int main(void)
 		(new DataThread(&thedata))->start();
 		(new DataThread(&thedata))->start();
 		
-		/*
-		DataThread * t3 = new DataThread(&thedata);
-		DataThread * t4 = new DataThread(&thedata);
-		DataThread * t5 = new DataThread(&thedata);
-		DataThread * t6 = new DataThread(&thedata);
-		DataThread * t7 = new DataThread(&thedata);
-		DataThread * t8 = new DataThread(&thedata);
-		DataThread * t9 = new DataThread(&thedata);
-		DataThread * s1 = new DataThread(&thedata);
-		DataThread * s2 = new DataThread(&thedata);
-		DataThread * s3 = new DataThread(&thedata);
-		DataThread * s4 = new DataThread(&thedata);
-		DataThread * s5 = new DataThread(&thedata);
-		DataThread * s6 = new DataThread(&thedata);
-		DataThread * s7 = new DataThread(&thedata);
-		DataThread * s8 = new DataThread(&thedata);
-		  */
 	}
 	catch(const std::runtime_error &err)
 	{

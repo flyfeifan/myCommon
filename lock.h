@@ -91,15 +91,16 @@ class LockGuard
 //class mutex
 class MutexLock : virtual public BaseLock{
 	public:
-		MutexLock();
+		MutexLock(bool shared = false);
 		virtual ~MutexLock();
 		virtual void enter();
 		virtual void leave();
 		bool          tryenter();
-	private:
+	protected:
 		pthread_mutex_t  _mutex;
-
+	private:
 		MutexLock(const MutexLock&);
+		//MutexLock();
 		MutexLock& operator=(const MutexLock&);
 
 
@@ -122,20 +123,25 @@ class ReadWriteLock : virtual public BaseLock{
 typedef TempGuard<ReadWriteLock>  RrwLockGuard;
 typedef WriteGuard<ReadWriteLock>  WrwLockGuard;
 
-class CondLock{
+class CondLock : virtual public MutexLock{
 	public:
-		CondLock();
+		CondLock(bool shared = false);
 		virtual ~CondLock();
 		virtual bool wait(int msec = 0);
 		virtual bool signal();
 		virtual bool broadcast();
+	public:
+		virtual void enter();
+		virtual void leave();
 		
-	private:
+	protected:
 		pthread_cond_t   _condlock;
-		pthread_mutex_t  _mutexlock;
-
+		//pthread_mutex_t  _mutexlock;
+		bool             _outlock;
+	private:
 		CondLock(const CondLock&);
 		CondLock& operator=(const CondLock&);
+		//CondLock();
 };
 
 class Semaphore{

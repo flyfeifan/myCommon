@@ -5,13 +5,20 @@
 #include "lock.h"
 
 namespace Common{
-MutexLock::MutexLock()
+MutexLock::MutexLock(bool shared /*= false*/)
 {
 	pthread_mutexattr_t  m_attr;
 	if(0 != pthread_mutexattr_init(&m_attr) )
 		throw LockException("init mutex attr failed", __FILE__, __LINE__, errno);
 	if(0 != pthread_mutexattr_settype(&m_attr, PTHREAD_MUTEX_ERRORCHECK) )
 		throw LockException("set mutex attr type failed", __FILE__, __LINE__, errno);
+	
+	if( shared )
+	{
+		if( 0 != pthread_mutexattr_setpshared(&m_attr, PTHREAD_PROCESS_SHARED) )
+			throw LockException("failed to set PTHREAD_PROCESS_SHARED", __FILE__, __LINE__, errno );
+	}
+
 	if(0 != pthread_mutex_init(&_mutex,&m_attr) )
 	{
 		pthread_mutexattr_destroy(&m_attr);
@@ -73,29 +80,82 @@ void ReadWriteLock::wenter()
 		throw LockException("lock write lock failed", __FILE__, __LINE__, errno);
 }
 
-CondLock::CondLock()
+CondLock::CondLock(bool shared /*=false*/) : _outlock(false), MutexLock(shared)
 {
-	if(0 != pthread_mutex_init(&_mutexlock, NULL) )
-		throw LockException("init mutex of condlock failed", __FILE__, __LINE__, errno);
-	if(0 != pthread_cond_init(&_condlock, NULL ) )
-		throw LockException("init cond of condlock failed", __FILE__, __LINE__, errno);
+	if( !shared )
+	{
+		//if(0 != pthread_mutex_init(&_mutexlock, NULL) )
+		//	throw LockException("init mutex of condlock failed", __FILE__, __LINE__, errno);
+		if(0 != pthread_cond_init(&_condlock, NULL ) )
+			throw LockException("init cond of condlock failed", __FILE__, __LINE__, errno);
+	}
+	else
+	{
+		/*
+		pthread_mutexattr_t  m_attr;
+		if(0 != pthread_mutexattr_init(&m_attr) )
+			throw LockException("init mutex attr failed", __FILE__, __LINE__, errno);
+
+		if( 0 != pthread_mutexattr_setpshared(&m_attr, PTHREAD_PROCESS_SHARED) )
+			throw LockException("failed to set PTHREAD_PROCESS_SHARED", __FILE__, __LINE__, errno );
+		if(0 != pthread_mutex_init(&_mutexlock,&m_attr) )
+		{
+			pthread_mutexattr_destroy(&m_attr);
+			throw LockException("init mutex failed", __FILE__, __LINE__, errno);
+		}
+		pthread_mutexattr_destroy(&m_attr);
+		*/
+		pthread_condattr_t  c_attr;
+		if( 0 != pthread_condattr_init(&c_attr) )
+			throw LockException("init cond attr failed", __FILE__, __LINE__, errno);
+		if( 0 != pthread_condattr_setpshared(&c_attr, PTHREAD_PROCESS_SHARED) )
+			throw LockException("failed to set PTHREAD_PROCESS_SHARED", __FILE__, __LINE__, errno );
+		
+		if(0 != pthread_cond_init(&_condlock, NULL ) )
+		{
+			pthread_condattr_destroy(&c_attr);
+			throw LockException("init cond of condlock failed", __FILE__, __LINE__, errno);
+		}	
+		pthread_condattr_destroy(&c_attr);
+	}
 }
 
 CondLock::~CondLock()
 {
-	if( 0 != pthread_mutex_destroy(&_mutexlock) )
-		throw LockException("destroyed mutex of condlock failed", __FILE__, __LINE__, errno);
+	//if( 0 != pthread_mutex_destroy(&_mutexlock) )
+	//	throw LockException("destroyed mutex of condlock failed", __FILE__, __LINE__, errno);
 
 	if( 0 != pthread_cond_destroy(&_condlock) )
 		throw LockException("destroyed cond of condlock failed", __FILE__, __LINE__, errno);
 }
 
+void CondLock::enter()
+{
+	MutexLock::enter();
+	_outlock = true;
+}
+
+void CondLock::leave()
+{
+	MutexLock::leave();
+	_outlock = false;
+}
+
 bool CondLock::wait( int msec /*=0*/)
 {
+	if( !_outlock )
+	{
+		enter();
+	}
+
 	if( msec <= 0 )
 	{
-		if( 0 != pthread_cond_wait(&_condlock, &_mutexlock) )
+		if( 0 != pthread_cond_wait(&_condlock, &_mutex) )
+		{
+			if( !_outlock )
+				leave();
 			return false;
+		}
 	}
 	else
 	{
@@ -107,9 +167,15 @@ bool CondLock::wait( int msec /*=0*/)
 		timv.tv_sec = timenow.tv_sec + msec / 1000;
 		timv.tv_nsec = (timenow.tv_usec + msec % 1000) * 1000 ;
 
-		if( 0 != pthread_cond_timedwait(&_condlock, &_mutexlock, &timv) )
+		if( 0 != pthread_cond_timedwait(&_condlock, &_mutex, &timv) )
+		{
+			if( !_outlock )
+				leave();
 			return false;
+		}
 	}
+	if( !_outlock )
+		leave();
 	return true;
 }
 

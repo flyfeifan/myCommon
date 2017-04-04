@@ -1,6 +1,8 @@
 
 #include "thread.h"
 #include <errno.h>
+#include <stdlib.h>
+#include <time.h>
 
 namespace Common{
 
@@ -40,6 +42,7 @@ void Thread::start()
 
 void* Thread::thread_exec(void* th)
 {
+	srand(time(0));
 	Thread* curr_th = static_cast<Thread*>(th);
 	if(curr_th->_wait)
 	{
@@ -115,6 +118,7 @@ void NativeThread::stop()
 
 void* NativeThread::thread_exec(void* th)
 {
+	srand(time(0));
 	NativeThread* curr_th = static_cast<NativeThread*>(th);
 	try{
 		curr_th->run();
