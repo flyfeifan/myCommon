@@ -35,4 +35,8 @@ clean:
 	rm -f *.o
 	rm -f ./tools/*.o
 	rm -f ./algorithms/*.o
-	
+	rm -f main
+	rm -f common.so
+	rm -f *~
+	rm -f ./tools/*~
+	rm -f ./algorithms/*~

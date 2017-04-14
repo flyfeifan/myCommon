@@ -228,7 +228,7 @@ private:
 
 std::vector<int> data;
 Common::CondLock  cond;
-Common::MutexLock mutex;
+//Common::MutexLock mutex(true);
 
 class DataThread : public Common::NativeThread{
 public:
@@ -236,30 +236,45 @@ public:
 		//Common::Thread::start();
 	}
 	virtual ~DataThread(){ 
-		std::cout<< "stop thread: " << _tid<<std::endl;
+		//std::cout<< "stop thread: " << _tid<<std::endl;
 	}
 	virtual int run()
 	{
-		std::cout << _tid << " : start run" << std::endl;
-		if( rand() % 2 == 0 )
+		//std::cout << _tid << " : start run" << std::endl;
+		try
 		{
-			mutex.enter();
-			std::cout <<_tid<<" :  mutex enter" << std::endl;
-			/*
-			int dd = rand() % 2000;
-			cond.enter();
-			data.push_back(dd);
-			cond.leave();
-			cond.signal();
-			std::cout<< "G: "<<dd<<std::endl;
-			*/
-		}
-		else
-		{
-			mutex.leave();
-			std::cout << _tid<< " : mutex leave" <<std::endl;
-		}
+			if( rand() % 3 == 0 )
+			{
+				int dd = rand() % 2000;
+				cond.enter();
+				data.push_back(dd);
+				cond.leave();
+				cond.signal();
+				std::cout<< _tid <<" add: "<<dd<<std::endl;
+			}
+			else
+			{
+				int ss = -1;
+				bool empty = true;
+				cond.enter();
+				if( !data.empty() || cond.wait() )
+				{
+					std::cout << _tid << " erase: " <<data[0] << std::endl;
+					data.erase( data.begin() );
+				}
+				else
+				{
+					std::cout << "wait time out" << std::endl;
+				}
 
+				cond.leave();
+
+			}
+		}
+		catch(...)
+		{
+			std::cout << _tid << "exception" <<std::endl;
+		}
 		return 0;
 	}
 
@@ -280,41 +295,77 @@ int main(void)
 		DoSomeData  thedata;
 		
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
+		sleep(1);
 		(new DataThread(&thedata))->start();
 		
 	}

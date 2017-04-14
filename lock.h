@@ -137,7 +137,7 @@ class CondLock : virtual public MutexLock{
 	protected:
 		pthread_cond_t   _condlock;
 		//pthread_mutex_t  _mutexlock;
-		bool             _outlock;
+		//bool             _outlock;
 	private:
 		CondLock(const CondLock&);
 		CondLock& operator=(const CondLock&);

@@ -80,7 +80,7 @@ void ReadWriteLock::wenter()
 		throw LockException("lock write lock failed", __FILE__, __LINE__, errno);
 }
 
-CondLock::CondLock(bool shared /*=false*/) : _outlock(false), MutexLock(shared)
+CondLock::CondLock(bool shared /*=false*/) : MutexLock(shared)
 {
 	if( !shared )
 	{
@@ -132,28 +132,19 @@ CondLock::~CondLock()
 void CondLock::enter()
 {
 	MutexLock::enter();
-	_outlock = true;
 }
 
 void CondLock::leave()
 {
 	MutexLock::leave();
-	_outlock = false;
 }
 
 bool CondLock::wait( int msec /*=0*/)
 {
-	if( !_outlock )
-	{
-		enter();
-	}
-
 	if( msec <= 0 )
 	{
 		if( 0 != pthread_cond_wait(&_condlock, &_mutex) )
 		{
-			if( !_outlock )
-				leave();
 			return false;
 		}
 	}
@@ -169,13 +160,9 @@ bool CondLock::wait( int msec /*=0*/)
 
 		if( 0 != pthread_cond_timedwait(&_condlock, &_mutex, &timv) )
 		{
-			if( !_outlock )
-				leave();
 			return false;
 		}
 	}
-	if( !_outlock )
-		leave();
 	return true;
 }
 
